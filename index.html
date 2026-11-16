@@ -69,16 +69,29 @@
   @media (prefers-reduced-motion: reduce) { .scherm, .schema li, .kaart.nieuw { animation: none !important; } button { transition: none; } button:active { transform: none; } }
   @media print { .scherm, .schema li { animation: none !important; } }
   .leeg { color: var(--d); font-style: italic; }
+  .vlabel { font-weight: bold; margin: 14px 0 4px; }
+  .rollen { border: 2px solid var(--k); border-left: 8px solid var(--m); padding: 10px 16px; margin: 0 0 18px; }
+  .rollen h3 { margin: 0 0 4px; font-size: 16px; }
+  .rollen ul { margin: 0; padding-left: 20px; }
+  .rollen p { margin: 6px 0 0; }
+  fieldset { border: 2px solid var(--k); padding: 4px 16px 14px; margin: 14px 0; }
+  legend { font-weight: bold; padding: 0 6px; }
+  h2[tabindex], h3[tabindex], main:focus { outline: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .skip { position: absolute; left: -9999px; top: 8px; background: #fff; color: #000; padding: 8px 12px; border: 2px solid var(--k); font-weight: bold; z-index: 10; }
+  .skip:focus { left: 8px; outline: 3px solid var(--m); outline-offset: 2px; }
   @media print { nav, button, .noprint { display: none !important; } header { background: #fff; color: #000; padding: 0 0 10px; } }
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Naar de inhoud</a>
 <header>
   <h1>Loop de route</h1>
   <p>M6 BO museum-app: test elkaars user journey en briefing</p>
 </header>
-<nav id="nav"></nav>
-<main id="main"></main>
+<nav id="nav" aria-label="Stappen"></nav>
+<main id="main" tabindex="-1"></main>
+<div id="melder" class="sr" aria-live="polite"></div>
 
 <script>
 (function () {
@@ -111,13 +124,13 @@
   ];
   var VRAGEN = {
     zelf: [
-      ["q1", "Welke stap uit jullie journeys staat nog niet als user story in de briefing?", "Loop elke journey stap voor stap na. Geen enkele? Schrijf dan: geen."],
+      ["q1", "Welke stap uit jullie journeys staat nog niet als user story in de briefing?", "Ieder neemt een andere journey en loopt die stap voor stap na. Geen enkele? Schrijf dan: geen."],
       ["q2", "Welke must-have user story komt in geen enkele journey voor?", "Kijk in de briefing naar alle user stories met een M."],
       ["q3", "Waar in de journey moet de gebruiker wachten, zoeken of iets onthouden?", "Dat zijn de plekken waar Peter of Daan afhaakt."],
       ["q4", "Wat weten jullie nog niet, maar hebben jullie wel nodig om dit te bouwen?", "Denk aan inhoud van het museum, techniek of wensen van de docent."]
     ],
     ronde: [
-      ["twijfel", "Waar twijfelde de tester of stelde hij een vraag?", "Noem de stap in de journey."],
+      ["twijfel", "Waar twijfelde de tester of kwam er een vraag?", "Noem de stap in de journey. De waarnemer heeft dit bijgehouden."],
       ["ontbreekt", "Welke stap ontbrak, of was er te veel?", ""],
       ["briefing", "Wat klopt er niet tussen de journey en de briefing?", "Bijvoorbeeld: de tester doet iets wat nergens in de briefing staat."]
     ],
@@ -126,27 +139,48 @@
       ["teveel", "Wat is waarschijnlijk te veel of te moeilijk?", "Wees eerlijk. Schrappen is ook een keuze."],
       ["mist", "Welke kennis of techniek missen jullie nog?", ""],
       ["nodig", "Wat hebben jullie nodig van het museum of van de docent?", ""],
-      ["reden", "Waarom geven de testers dit cijfer?", "Laat de testers dit in hun eigen woorden zeggen."]
+      ["reden", "Waarom geven de testers dit cijfer?", "Laat elke tester om de beurt één reden noemen, in eigen woorden."]
     ]
   };
 
   // Uitleg en schema per stap. Het vetgedrukte vak in het schema is de kern van de stap.
   var UITLEG = {
-    groep: { tekst: ["In deze app testen jullie met een ander groepje elkaars user journey en briefing. Daarna bespreken jullie of het project haalbaar is.", "Jullie doorlopen zeven stappen. Bij elke stap stelt de app vragen. Beantwoord ze samen. In totaal duurt het ongeveer 75 minuten."],
+    groep: { tekst: ["In deze app testen jullie met een ander groepje elkaars user journey en briefing. Daarna bespreken jullie of het project haalbaar is.", "Jullie doorlopen zeven stappen. Bij elke stap stelt de app vragen. Beantwoord ze samen. In totaal duurt het ongeveer 85 minuten.", "Jullie werken met z'n drieën. Bij elke stap krijgt ieder een andere rol. Zo praat iedereen mee en typt niet steeds dezelfde persoon."],
       schema: ["Rode draad (20 min)", "Zelfcontrole (10 min)", "Loop de route (2 x 15 min)", "Haalbaarheid (10 min)", "Top 3 (15 min)", "Inleveren"], nu: -1 },
-    draad: { tekst: ["Jullie leggen de rode draad tussen de briefing en de user journey: wat de gebruiker wil (user story) en hoe hij dat stap voor stap doet (journey).", "Gebruik jullie museumonderwerp als voorbeeld. Zo wordt de journey concreet."],
+    draad: { tekst: ["Jullie leggen de rode draad tussen de briefing en de user journey: wat de gebruiker wil (user story) en hoe de gebruiker dat stap voor stap doet (journey).", "Gebruik jullie museumonderwerp als voorbeeld. Zo wordt de journey concreet.", "Werk zo: ieder bedenkt eerst zelf een journey. Vertel ze daarna om de beurt aan elkaar en maak er samen één van."],
       schema: ["User story uit de briefing", "Journey in stappen", "Voorbeeld uit het museum"], nu: 1 },
-    zelf: { tekst: ["Leg de journeys naast de briefing en zoek de gaten. Een stap zonder user story betekent dat er iets ontbreekt in de briefing. Een must-have user story zonder journey is nog niet uitgedacht."],
-      schema: ["Journey naast briefing leggen", "Gaten zoeken", "Antwoorden opschrijven"], nu: 1 },
-    test: { tekst: ["Let op: jullie lopen niet echt ergens heen. De tester speelt een scenario na, aan tafel. Hij doet alsof hij Peter of Daan is en vertelt hardop, stap voor stap, wat hij zou doen.", "De makers lezen mee in hun eigen journey en leggen niets uit. Zo zie je waar de journey en de briefing niet kloppen. Daarna wisselen de groepjes van rol."],
-      schema: ["Testers trekken een scenario", "Tester speelt het na en praat hardop", "Makers lezen mee en zwijgen", "Samen de vragen beantwoorden", "Wisselen van rol"], nu: 1 },
-    haalbaar: { tekst: ["De testers hebben net jullie journey en briefing gezien. Bespreek samen of jullie dit project kunnen bouwen in de tijd die er is. De testers geven een cijfer en zeggen waarom."],
+    zelf: { tekst: ["Leg de journeys naast de briefing en zoek de gaten. Een stap zonder user story betekent dat er iets ontbreekt in de briefing. Een must-have user story zonder journey is nog niet uitgedacht.", "Werk zo: ieder zoekt eerst 2 minuten zelf. Daarna noemt ieder om de beurt één gat. Kies dan samen wat jullie opschrijven."],
+      schema: ["Ieder zoekt zelf", "Om de beurt een gat noemen", "Samen antwoorden opschrijven"], nu: 1 },
+    test: { tekst: ["Let op: jullie lopen niet echt ergens heen. De tester speelt een scenario na, aan tafel. De tester speelt Peter of Daan en vertelt hardop, stap voor stap, wat er gebeurt.", "Elk van de drie testers speelt één scenario van ongeveer 5 minuten. De makers lezen mee in hun eigen journey en leggen niets uit. Zo zie je waar de journey en de briefing niet kloppen. Daarna wisselen de groepjes van rol."],
+      schema: ["Tester trekt een scenario", "Tester speelt het na en praat hardop", "Makers lezen mee en zwijgen", "Samen de vragen beantwoorden", "Volgende tester"], nu: 1 },
+    haalbaar: { tekst: ["De testers hebben net jullie journey en briefing gezien. Bespreek samen of jullie dit project kunnen bouwen in de tijd die er is. De testers geven een cijfer en zeggen waarom.", "Zorg dat iedereen iets zegt: de makers en alle drie de testers."],
       schema: ["Makers vertellen wat ze willen bouwen", "Testers zeggen wat ze ervan denken", "Samen een cijfer kiezen"], nu: 1 },
-    top: { tekst: ["Lees alles terug wat jullie hebben opgeschreven. Kies de drie punten die het meeste verschil maken en schrijf op wat jullie aanpassen in de journey of in de briefing."],
-      schema: ["Antwoorden teruglezen", "Drie punten kiezen", "Aanpassing opschrijven"], nu: 1 },
+    top: { tekst: ["Lees alles terug wat jullie hebben opgeschreven. Kies de drie punten die het meeste verschil maken en schrijf op wat jullie aanpassen in de journey of in de briefing.", "Werk zo: ieder noemt om de beurt het punt dat die persoon het belangrijkst vindt. Kies daarna samen de top 3."],
+      schema: ["Antwoorden teruglezen", "Om de beurt een punt noemen", "Samen drie punten kiezen", "Aanpassing opschrijven"], nu: 2 },
     export: { tekst: ["Het JSON-bestand bevat al jullie antwoorden. Jullie docent laadt dit bestand bij de review."],
       schema: ["Controleren", "JSON-bestand downloaden", "Inleveren bij je docent"], nu: 1 }
   };
+  // Rollen per stap. De app verdeelt ze over de drie namen en schuift elke stap een plek door.
+  var ROLLEN = {
+    draad: [["Gespreksleider", "Stelt de vragen en zorgt dat iedereen iets zegt."], ["Schrijver", "Typt wat de groep afspreekt, niet alleen de eigen mening."], ["Tijdbewaker", "Let op de timer en zegt het als er nog 2 minuten over zijn."]],
+    zelf: [["Gespreksleider", "Stelt de vragen en geeft ieder om de beurt het woord."], ["Schrijver", "Typt wat de groep afspreekt, niet alleen de eigen mening."], ["Tijdbewaker", "Let op de timer en zegt het als er nog 2 minuten over zijn."]],
+    test: [["Meelezer", "Leest in de journey mee waar de tester is. Zegt niets."], ["Waarnemer", "Let op waar de tester twijfelt of iets vraagt. Zegt niets."], ["Schrijver", "Typt na elk scenario de antwoorden. Vraagt de andere twee wat zij zagen."]],
+    haalbaar: [["Gespreksleider", "Vertelt wat jullie willen bouwen en vraagt elke tester om een mening."], ["Schrijver", "Typt de antwoorden van makers en testers."], ["Tijdbewaker", "Let op de timer en vat aan het eind samen wat is afgesproken."]],
+    top: [["Gespreksleider", "Laat ieder om de beurt een punt noemen en leidt de keuze."], ["Schrijver", "Typt de drie punten en de aanpassingen."], ["Tijdbewaker", "Let op de timer en zegt het als er nog 2 minuten over zijn."]]
+  };
+  function naam(i) { return vol(data.namen[i]) ? String(data.namen[i]).trim() : "Persoon " + (i + 1); }
+  function rollen(tab) {
+    var r = ROLLEN[tab];
+    if (!r) return null;
+    var i = STAPPEN.map(function (s) { return s[0]; }).indexOf(tab);
+    return el("div", { class: "rollen" }, [
+      el("h3", { text: "Rollen in deze stap" }),
+      el("ul", {}, r.map(function (rol, j) {
+        return el("li", {}, [el("strong", { text: naam((j + i) % 3) + ": " + rol[0] + ". " }), el("span", { text: rol[1] })]);
+      })),
+      el("p", { class: "hint", text: "Geef de laptop aan de schrijver. Bij de volgende stap wisselen de rollen." })
+    ]);
+  }
   function zoWerkt(tab) {
     var u = UITLEG[tab];
     if (!u) return null;
@@ -164,7 +198,7 @@
 
   function leeg() {
     return {
-      app: "loop-de-route", versie: 2, groep: "", leden: "", onderwerp: "",
+      app: "loop-de-route", versie: 3, groep: "", namen: ["", "", ""], onderwerp: "",
       stories: [
         { wie: "Peter (docent)", story: "", journey: "" }, { wie: "Peter (docent)", story: "", journey: "" },
         { wie: "Daan (leerling)", story: "", journey: "" }, { wie: "Daan (leerling)", story: "", journey: "" }
@@ -174,9 +208,17 @@
     };
   }
   function geldig(d) {
-    return d && d.app === "loop-de-route" && d.versie === 2 && Array.isArray(d.stories) && Array.isArray(d.rondes) && Array.isArray(d.top);
+    return !!d && d.app === "loop-de-route" && (d.versie === 2 || d.versie === 3) && Array.isArray(d.stories) && Array.isArray(d.rondes) && Array.isArray(d.top);
   }
+  // Vult ontbrekende velden aan en zet een bestand van versie 2 om naar versie 3.
   function vulAan(d) {
+    if (!Array.isArray(d.namen)) {
+      var delen = String(d.leden || "").split(/\s*(?:,|;|\n|\ben\b)\s*/).filter(function (x) { return x; });
+      d.namen = [delen[0] || "", delen[1] || "", delen.slice(2).join(", ")];
+    }
+    while (d.namen.length < 3) d.namen.push("");
+    delete d.leden;
+    d.versie = 3;
     var b = leeg();
     Object.keys(b).forEach(function (k) { if (d[k] == null) d[k] = b[k]; });
     return d;
@@ -188,7 +230,13 @@
     if (geldig(bewaard)) data = vulAan(bewaard);
   } catch (e) { /* opslag niet beschikbaar */ }
 
-  var ui = { tab: "groep", anim: "vooruit", nieuweKaart: false, scenario: null, ronde: {}, sec: 0, loopt: false, klok: null, wissen: false, review: [], melding: "" };
+  var ui = { tab: "groep", anim: "vooruit", nieuweKaart: false, scenario: null, ronde: {}, sec: 0, loopt: false, klok: null, wissen: false, verwijder: -1, focus: "", review: [], melding: "" };
+
+  // Bericht voor schermlezers. Het vak staat buiten main en blijft dus bestaan.
+  function meld(tekst) {
+    var m = document.getElementById("melder");
+    if (m) m.textContent = tekst;
+  }
 
   function bewaar() {
     try { localStorage.setItem(SLEUTEL, JSON.stringify(data)); } catch (e) { /* negeren */ }
@@ -249,8 +297,8 @@
     return el("div", { class: "timerbalk" }, [
       el("span", { text: "Tijd voor deze stap:" }),
       el("span", { id: "timer", class: "timer", text: tijd(Math.max(ui.sec, 0)) }),
-      el("button", { id: "startknop", class: "prim klein", text: ui.loopt ? "Pauze" : "Start", onclick: startStop }),
-      el("button", { class: "klein", text: "Opnieuw (" + minuten + " min)", onclick: function () { stopKlok(); ui.sec = minuten * 60; teken(); } }),
+      el("button", { id: "startknop", "data-f": "start", class: "prim klein", text: ui.loopt ? "Pauze" : "Start", onclick: startStop }),
+      el("button", { class: "klein", "data-f": "opnieuw", text: "Opnieuw (" + minuten + " min)", onclick: function () { stopKlok(); ui.sec = minuten * 60; teken(); } }),
       el("span", { id: "tijdop", role: "status", text: ui.sec <= 0 ? "De tijd is om. Rond af en ga door naar de volgende stap." : "" })
     ]);
   }
@@ -260,9 +308,10 @@
     var i = STAPPEN.map(function (s) { return s[0]; }).indexOf(ui.tab);
     return [
       el("p", { class: "stap", text: "Stap " + (i + 1) + " van " + STAPPEN.length }),
-      el("h2", { text: titel }),
+      el("h2", { text: titel, tabindex: "-1", "data-f": "kop" }),
       el("p", { class: "uitleg", text: uitleg }),
       zoWerkt(ui.tab),
+      rollen(ui.tab),
       timerBalk(STAPPEN[i][2])
     ];
   }
@@ -277,7 +326,11 @@
   function tabGroep() {
     return el("div", {}, kop("Wie zijn jullie?", "Vul eerst in wie jullie zijn. Alles wordt bewaard op deze laptop.").concat([
       vraag("Hoe heet jullie groepje?", "", data, "groep"),
-      vraag("Wie zitten er in het groepje?", "", data, "leden"),
+      el("fieldset", {}, [
+        el("legend", { text: "Wie zitten er in het groepje?" }),
+        el("p", { class: "hint", text: "Vul drie namen in. De app verdeelt bij elke stap de rollen over jullie drieën." }),
+        vraag("Naam 1", "", data.namen, 0), vraag("Naam 2", "", data.namen, 1), vraag("Naam 3", "", data.namen, 2)
+      ]),
       vraag("Welk thema, welke periode of welk object hebben jullie gekozen in het museum?", "", data, "onderwerp"),
       el("h3", { text: "Leg dit klaar" }),
       el("ul", {}, [el("li", { text: "Jullie briefing met de user stories" }), el("li", { text: "Jullie user journeys" }), el("li", { text: "Wat jullie in het museum hebben verzameld" })]),
@@ -308,6 +361,7 @@
     do { i = Math.floor(Math.random() * SCENARIOS.length); } while (SCENARIOS[i] === ui.scenario);
     ui.scenario = SCENARIOS[i];
     ui.nieuweKaart = true; teken(); ui.nieuweKaart = false;
+    meld("Scenario voor " + ui.scenario.wie + ". " + ui.scenario.taak);
   }
   function tabTest() {
     var kids = kop("Loop de route", "Een ander groepje test jullie werk door een scenario na te spelen.");
@@ -315,22 +369,32 @@
     kids.push(ui.scenario
       ? el("div", { class: "kaart" + (ui.nieuweKaart ? " nieuw" : "") }, [el("div", { class: "wie", text: ui.scenario.wie }), el("div", { class: "taak", text: ui.scenario.taak })])
       : el("div", { class: "kaart" }, [el("div", { class: "taak", text: "Laat de testers een scenario trekken." })]));
-    kids.push(el("div", { class: "rij" }, [el("button", { class: "prim", text: ui.scenario ? "Ander scenario" : "Trek een scenario", onclick: trek })]));
+    kids.push(el("div", { class: "rij" }, [el("button", { class: "prim", "data-f": "trek", text: ui.scenario ? "Ander scenario" : "Trek een scenario", onclick: trek })]));
     if (ui.scenario) {
+      kids.push(vraag("Welke tester speelt dit scenario?", "Elke tester speelt één keer. De andere twee testers kijken mee.", ui.ronde, "speler", false, false));
       kids.push(el("h3", { text: "Na dit scenario" }));
+      kids.push(el("p", { class: "hint", text: "Vraag eerst aan de meelezer en de waarnemer wat zij zagen. Vraag daarna aan de testers of het klopt." }));
       VRAGEN.ronde.forEach(function (v) { kids.push(vraag(v[1], v[2], ui.ronde, v[0], true, false)); });
       if (ui.melding) kids.push(el("div", { class: "melding", role: "alert", text: ui.melding }));
-      kids.push(el("div", { class: "rij" }, [el("button", { class: "prim", text: "Ronde opslaan", onclick: function () {
+      kids.push(el("div", { class: "rij" }, [el("button", { class: "prim", "data-f": "opslaan", text: "Ronde opslaan", onclick: function () {
         if (!VRAGEN.ronde.some(function (v) { return vol(ui.ronde[v[0]]); })) { ui.melding = "Beantwoord eerst minimaal één vraag."; teken(); return; }
         data.rondes.push(Object.assign({ scenario: ui.scenario.wie + ": " + ui.scenario.taak }, ui.ronde));
-        ui.ronde = {}; ui.scenario = null; ui.melding = ""; bewaar(); teken();
+        ui.ronde = {}; ui.scenario = null; ui.melding = ""; ui.focus = "trek"; bewaar(); teken();
+        meld("Ronde " + data.rondes.length + " is opgeslagen.");
       } })]));
     }
-    kids.push(el("h3", { text: "Opgeslagen rondes (" + data.rondes.length + ")" }));
-    kids.push(el("p", { class: "hint", text: "Doe minimaal twee rondes: één als Peter en één als Daan." }));
+    kids.push(el("h3", { tabindex: "-1", "data-f": "rondes", text: "Opgeslagen rondes (" + data.rondes.length + ")" }));
+    kids.push(el("p", { class: "hint", text: "Doe minimaal drie rondes: elke tester speelt één scenario. Speel minstens één keer Peter en één keer Daan." }));
     if (!data.rondes.length) kids.push(el("p", { class: "leeg", text: "Nog geen rondes." }));
     data.rondes.forEach(function (r, i) {
-      kids.push(el("div", { class: "bev" }, [toonRonde(r), el("div", { class: "rij" }, [el("button", { class: "klein", text: "Ronde verwijderen", onclick: function () { data.rondes.splice(i, 1); bewaar(); teken(); } })])]));
+      kids.push(el("div", { class: "bev" }, [el("p", { class: "stap", text: "Ronde " + (i + 1) }), toonRonde(r), el("div", { class: "rij" }, ui.verwijder === i ? [
+        el("button", { class: "act klein", "data-f": "delja", text: "Ja, verwijder ronde " + (i + 1), onclick: function () {
+          data.rondes.splice(i, 1); ui.verwijder = -1; ui.focus = "rondes"; bewaar(); teken(); meld("Ronde " + (i + 1) + " is verwijderd.");
+        } }),
+        el("button", { class: "klein", text: "Annuleren", onclick: function () { ui.verwijder = -1; ui.focus = "del" + i; teken(); } })
+      ] : [
+        el("button", { class: "klein", "data-f": "del" + i, text: "Ronde " + (i + 1) + " verwijderen", onclick: function () { ui.verwijder = i; ui.focus = "delja"; teken(); } })
+      ])]));
     });
     kids.push(knoppen());
     return el("div", {}, kids);
@@ -340,10 +404,10 @@
     var h = data.haalbaar;
     var kids = kop("Haalbaarheid", "Bespreek met de testers of jullie project haalbaar is.");
     VRAGEN.haalbaar.slice(0, 4).forEach(function (v) { kids.push(vraag(v[1], v[2], h, v[0], true)); });
-    kids.push(el("label", { id: "scorelabel", text: "Hoe haalbaar vinden de testers jullie project?" }));
+    kids.push(el("p", { id: "scorelabel", class: "vlabel", text: "Hoe haalbaar vinden de testers jullie project?" }));
     kids.push(el("p", { class: "hint", text: "1 = niet haalbaar, 5 = goed haalbaar" }));
     kids.push(el("div", { class: "rij", role: "group", "aria-labelledby": "scorelabel" }, [1, 2, 3, 4, 5].map(function (n) {
-      return el("button", { class: String(h.score) === String(n) ? "act" : "", "aria-pressed": String(h.score) === String(n) ? "true" : "false", text: String(n),
+      return el("button", { "data-f": "score" + n, class: String(h.score) === String(n) ? "act" : "", "aria-pressed": String(h.score) === String(n) ? "true" : "false", text: String(n),
         onclick: function () { h.score = n; bewaar(); teken(); } });
     })));
     var v = VRAGEN.haalbaar[4];
@@ -378,14 +442,15 @@
       [vol(d.groep), "Naam van het groepje is ingevuld"],
       [d.stories.every(function (s) { return vol(s.story) && vol(s.journey); }), "Vier user stories hebben een journey"],
       [VRAGEN.zelf.every(function (v) { return vol(d.zelf[v[0]]); }), "De zelfcontrole is ingevuld"],
-      [d.rondes.length >= 2, "Er zijn minimaal twee testrondes opgeslagen"],
+      [d.namen.every(vol), "Drie namen zijn ingevuld"],
+      [d.rondes.length >= 3, "Er zijn minimaal drie testrondes opgeslagen"],
       [vol(d.haalbaar.score) && vol(d.haalbaar.reden), "De haalbaarheid is besproken en heeft een cijfer"],
       [d.top.every(function (t) { return vol(t.mis) && vol(t.aanpassing); }), "De top 3 is compleet"]
     ];
   }
   function klaarTab(tab) {
-    var c = controle(data), m = { groep: 0, draad: 1, zelf: 2, test: 3, haalbaar: 4, top: 5 };
-    return m[tab] != null && c[m[tab]][0];
+    var c = controle(data), m = { groep: [0, 3], draad: [1], zelf: [2], test: [4], haalbaar: [5], top: [6] };
+    return !!m[tab] && m[tab].every(function (n) { return c[n][0]; });
   }
   function tabExport() {
     return el("div", {}, kop("Inleveren", "Controleer of alles klaar is. Download daarna het JSON-bestand en lever het in op de plek die je docent aangeeft.").concat([
@@ -397,9 +462,9 @@
       el("p", { class: "hint", text: "Hiermee wis je alles op deze laptop. Download eerst je bestand." }),
       el("div", { class: "rij" }, [
         ui.wissen
-          ? el("button", { class: "act", text: "Ja, wis alles", onclick: function () { data = leeg(); ui.wissen = false; ui.scenario = null; ui.ronde = {}; bewaar(); ga("groep"); } })
-          : el("button", { text: "Alles wissen", onclick: function () { ui.wissen = true; teken(); } }),
-        ui.wissen ? el("button", { text: "Annuleren", onclick: function () { ui.wissen = false; teken(); } }) : null
+          ? el("button", { class: "act", "data-f": "wisja", text: "Ja, wis alles", onclick: function () { data = leeg(); ui.wissen = false; ui.scenario = null; ui.ronde = {}; bewaar(); ga("groep"); meld("Alles is gewist."); } })
+          : el("button", { "data-f": "wissen", text: "Alles wissen", onclick: function () { ui.wissen = true; ui.focus = "wisja"; teken(); } }),
+        ui.wissen ? el("button", { text: "Annuleren", onclick: function () { ui.wissen = false; ui.focus = "wissen"; teken(); } }) : null
       ]),
       knoppen()
     ]));
@@ -410,11 +475,12 @@
     return el("div", {}, [el("p", { class: "hint", text: vraagTekst }), vol(antwoord) ? el("p", { class: "antw", text: String(antwoord) }) : el("p", { class: "leeg", text: "Niet ingevuld" })]);
   }
   function toonRonde(r) {
-    return el("div", {}, [el("p", {}, [el("span", { class: "tag", text: "Scenario" }), el("span", { text: r.scenario || "" })])]
+    return el("div", {}, [el("p", {}, [el("span", { class: "tag", text: "Scenario" }), el("span", { text: r.scenario || "" })]),
+      vol(r.speler) ? el("p", { class: "klein-tekst", text: "Gespeeld door: " + r.speler }) : null]
       .concat(VRAGEN.ronde.map(function (v) { return va(v[1], r[v[0]]); })));
   }
   function toonResultaat(d) {
-    var kids = [el("p", { class: "klein-tekst", text: "Leden: " + (d.leden || "-") + ". Onderwerp: " + (d.onderwerp || "-") + ". Getest door: " + (d.getestDoor || "-") + "." })];
+    var kids = [el("p", { class: "klein-tekst", text: "Leden: " + (d.namen.filter(vol).join(", ") || "-") + ". Onderwerp: " + (d.onderwerp || "-") + ". Getest door: " + (d.getestDoor || "-") + "." })];
     kids.push(el("h3", { text: "Rode draad" }));
     kids.push(el("table", {}, [
       el("thead", {}, [el("tr", {}, [el("th", { scope: "col", text: "Voor wie" }), el("th", { scope: "col", text: "User story" }), el("th", { scope: "col", text: "Journey" })])]),
@@ -462,10 +528,10 @@
     }
   }
   function tabImport() {
-    var kies = el("input", { type: "file", id: "bestanden", accept: ".json,application/json", multiple: "multiple" });
+    var kies = el("input", { type: "file", id: "bestanden", "data-f": "bestanden", accept: ".json,application/json", multiple: "multiple" });
     kies.addEventListener("change", function () { leesBestanden(kies.files); });
     var kids = [
-      el("h2", { text: "Importeren en review" }),
+      el("h2", { text: "Importeren en review", tabindex: "-1", "data-f": "kop" }),
       el("p", { class: "uitleg", text: "Laad een JSON-bestand om het resultaat van een groepje te bekijken. Je kunt ook meerdere bestanden tegelijk kiezen. Er wordt niets verstuurd; de bestanden blijven op dit apparaat." }),
       el("label", { for: "bestanden", text: "Kies een of meer JSON-bestanden" }),
       kies,
@@ -474,7 +540,7 @@
     if (!ui.review.length) { kids.push(el("p", { class: "leeg", text: "Nog geen bestanden geladen." })); return el("div", {}, kids); }
     kids.push(el("div", { class: "rij noprint" }, [
       el("button", { text: "Afdrukken", onclick: function () { window.print(); } }),
-      el("button", { text: "Lijst leegmaken", onclick: function () { ui.review = []; ui.melding = ""; teken(); } })
+      el("button", { text: "Lijst leegmaken", onclick: function () { ui.review = []; ui.melding = ""; ui.focus = "bestanden"; teken(); } })
     ]));
     if (ui.review.length > 1) {
       kids.push(el("h3", { text: "Overzicht (" + ui.review.length + " groepjes)" }));
@@ -509,17 +575,22 @@
     stopKlok();
     var volg = STAPPEN.map(function (x) { return x[0]; }).concat(["import"]);
     ui.anim = volg.indexOf(tab) < volg.indexOf(ui.tab) ? "terug" : "vooruit";
-    ui.tab = tab; ui.melding = ""; ui.wissen = false;
+    ui.tab = tab; ui.melding = ""; ui.wissen = false; ui.verwijder = -1; ui.focus = "kop";
     var s = STAPPEN.filter(function (x) { return x[0] === tab; })[0];
     ui.sec = s ? s[2] * 60 : 0;
-    teken(); window.scrollTo(0, 0);
+    window.scrollTo(0, 0); teken();
   }
+  // Het scherm wordt opnieuw opgebouwd. Daarna gaat de focus terug naar dezelfde knop (data-f),
+  // of naar de plek in ui.focus. Zo blijft de app bruikbaar met het toetsenbord.
   function teken() {
     teller = 0;
+    var actief = document.activeElement;
+    var doel = ui.focus || (actief && actief.getAttribute ? actief.getAttribute("data-f") : "");
+    ui.focus = "";
     var nav = document.getElementById("nav");
     nav.textContent = "";
     STAPPEN.map(function (s, i) { return [s[0], (i + 1) + ". " + s[1]]; }).concat([["import", "Importeren en review"]]).forEach(function (t) {
-      nav.appendChild(el("button", { class: ui.tab === t[0] ? "act" : (klaarTab(t[0]) ? "gedaan" : ""), text: t[1] + (klaarTab(t[0]) ? " (klaar)" : ""), "aria-current": ui.tab === t[0] ? "page" : false, onclick: function () { ga(t[0]); } }));
+      nav.appendChild(el("button", { "data-f": "nav-" + t[0], class: ui.tab === t[0] ? "act" : (klaarTab(t[0]) ? "gedaan" : ""), text: t[1] + (klaarTab(t[0]) ? " (klaar)" : ""), "aria-current": ui.tab === t[0] ? "page" : false, onclick: function () { ga(t[0]); } }));
     });
     var main = document.getElementById("main");
     main.textContent = "";
@@ -527,6 +598,10 @@
     scherm.className = "scherm" + (ui.anim ? " " + ui.anim : "");
     ui.anim = "";
     main.appendChild(scherm);
+    if (doel) {
+      var n = document.querySelector('[data-f="' + doel + '"]');
+      if (n) n.focus();
+    }
   }
   teken();
 })();
