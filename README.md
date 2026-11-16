@@ -1,7 +1,7 @@
 # Loop de route
 
 Werkvorm-app voor het project M6 BO museum-app (Mediacollege Amsterdam, Software Developer).
-Groepjes testen elkaars user journey en briefing en bespreken de haalbaarheid van hun project.
+Groepjes van drie testen elkaars user journey en briefing en bespreken de haalbaarheid van hun project.
 
 ## Gebruik
 
@@ -28,3 +28,4 @@ Alles staat bovenaan het script in `index.html`:
 - `STAPPEN`: de stappen en de tijd per stap in minuten
 - `VRAGEN`: de vragen per stap
 - `UITLEG`: de uitleg en het schema per stap
+- `ROLLEN`: de drie rollen per stap (de app verdeelt ze over de drie leden)
