@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop de route - M6 BO museum-app</title>
+<style>
+  :root { --m: #FF00CA; --ml: #FFD6F5; --k: #000; --g: #ECECEC; --d: #555; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--k); background: #fff; font-size: 17px; line-height: 1.45; }
+  header { background: var(--k); color: #fff; padding: 18px 24px; }
+  header h1 { margin: 0; font-size: 26px; }
+  header p { margin: 4px 0 0; color: var(--m); font-weight: bold; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 24px; border-bottom: 2px solid var(--m); }
+  button { font: inherit; cursor: pointer; border: 2px solid var(--k); background: #fff; color: var(--k); padding: 8px 14px; border-radius: 0; }
+  button:hover { background: var(--g); }
+  button.prim { background: var(--m); border-color: var(--m); color: #000; font-weight: bold; }
+  button.act { background: var(--k); color: #fff; }
+  button.klein { padding: 4px 10px; font-size: 15px; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--m); outline-offset: 2px; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px; }
+  h2 { font-size: 22px; margin: 0 0 6px; }
+  h3 { font-size: 18px; margin: 22px 0 6px; }
+  p.uitleg { margin: 0 0 16px; color: var(--d); }
+  label { display: block; font-weight: bold; margin: 14px 0 4px; }
+  input[type=text], textarea, select { font: inherit; width: 100%; padding: 8px; border: 2px solid var(--k); border-radius: 0; background: #fff; }
+  textarea { min-height: 60px; resize: vertical; }
+  .kaart { background: var(--ml); border: 2px solid var(--k); padding: 20px; margin: 12px 0; }
+  .kaart .wie { font-weight: bold; color: #000; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; }
+  .kaart .taak { font-size: 24px; font-weight: bold; margin-top: 6px; }
+  .timer { font-size: 64px; font-weight: bold; font-variant-numeric: tabular-nums; margin: 6px 0; }
+  .timer.op { color: var(--m); }
+  .rij { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+  .types button { flex: 1 1 180px; padding: 14px; font-weight: bold; }
+  .bev { border: 2px solid var(--k); padding: 12px; margin: 10px 0; }
+  .bev.top { background: var(--ml); }
+  .tag { display: inline-block; background: var(--k); color: #fff; padding: 2px 8px; font-size: 14px; font-weight: bold; margin-right: 6px; }
+  .klein-tekst { font-size: 14px; color: var(--d); }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid var(--k); padding: 8px; text-align: left; vertical-align: top; }
+  th { background: var(--k); color: #fff; }
+  .melding { background: var(--g); padding: 10px 14px; margin: 12px 0; border-left: 0; }
+  .hint { font-size: 15px; color: var(--d); margin: 0 0 4px; }
+  .stap { font-weight: bold; color: var(--d); text-transform: uppercase; font-size: 14px; letter-spacing: 1px; margin: 0 0 4px; }
+  .blok { border: 2px solid var(--k); padding: 14px 16px; margin: 14px 0; }
+  .blok h3 { margin-top: 0; }
+  .timerbalk { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--g); padding: 8px 14px; margin: 0 0 18px; }
+  .timerbalk .timer { font-size: 30px; margin: 0; }
+  .antw { white-space: pre-wrap; }
+  .schema { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 0; padding: 0; margin: 10px 0 0; align-items: stretch; }
+  .schema li { display: flex; align-items: center; }
+  .schema .doos { background: #fff; border: 2px solid var(--k); padding: 8px 12px; font-weight: bold; font-size: 15px; max-width: 190px; height: 100%; display: flex; align-items: center; }
+  .schema .doos.nu { background: var(--m); }
+  .schema .pijl { padding: 0 8px; font-weight: bold; font-size: 20px; }
+  .zowerkt { background: var(--ml); padding: 14px 16px; margin: 0 0 18px; }
+  .zowerkt h3 { margin: 0 0 4px; font-size: 16px; }
+  .zowerkt p { margin: 0 0 6px; }
+  nav button.gedaan { border-color: var(--m); }
+  button { transition: background-color .15s, transform .1s; }
+  button:active { transform: scale(.97); }
+  @keyframes vooruit { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+  @keyframes terug { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+  @keyframes inkomen { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes draai { from { opacity: 0; transform: rotateX(80deg); } to { opacity: 1; transform: none; } }
+  .scherm.vooruit { animation: vooruit .3s ease-out; }
+  .scherm.terug { animation: terug .3s ease-out; }
+  .scherm.vooruit .schema li, .scherm.terug .schema li { animation: inkomen .35s ease-out backwards; }
+  .kaart.nieuw { animation: draai .35s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .scherm, .schema li, .kaart.nieuw { animation: none !important; } button { transition: none; } button:active { transform: none; } }
+  @media print { .scherm, .schema li { animation: none !important; } }
+  .leeg { color: var(--d); font-style: italic; }
+  @media print { nav, button, .noprint { display: none !important; } header { background: #fff; color: #000; padding: 0 0 10px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Loop de route</h1>
+  <p>M6 BO museum-app: test elkaars user journey en briefing</p>
+</header>
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<script>
+(function () {
+  "use strict";
+
+  var SLEUTEL = "loop-de-route-v2";
+  var SCENARIOS = [
+    { wie: "Daan (leerling)", taak: "Je komt het museum binnen en wilt beginnen met de activiteit van je docent." },
+    { wie: "Daan (leerling)", taak: "Je hebt een opdracht af en wilt weten wat je nu moet doen." },
+    { wie: "Daan (leerling)", taak: "Je wilt zien hoeveel opdrachten je nog moet doen." },
+    { wie: "Daan (leerling)", taak: "Je snapt een opdracht niet en zoekt hulp of uitleg." },
+    { wie: "Daan (leerling)", taak: "Je wilt een opdracht samen met een klasgenoot doen." },
+    { wie: "Daan (leerling)", taak: "Je bent klaar met alles. Hoe weet je dat, en wat nu?" },
+    { wie: "Peter (docent)", taak: "Je wilt een nieuwe museumactiviteit maken voor je klas." },
+    { wie: "Peter (docent)", taak: "Je wilt een vraag toevoegen aan een bestaande opdracht." },
+    { wie: "Peter (docent)", taak: "Je wilt een opdracht aanpassen aan je eigen lesprogramma." },
+    { wie: "Peter (docent)", taak: "Je wilt de activiteit delen met je leerlingen." },
+    { wie: "Peter (docent)", taak: "Je wilt tijdens het bezoek zien hoe ver je leerlingen zijn." },
+    { wie: "Peter (docent)", taak: "Je gebruikt de website voor het eerst en wilt snel beginnen." }
+  ];
+  // Elke stap: sleutel, titel, minuten voor de timer (0 = geen timer)
+  var STAPPEN = [
+    ["groep", "Groepje", 0],
+    ["draad", "Rode draad", 20],
+    ["zelf", "Zelfcontrole", 10],
+    ["test", "Loop de route", 15],
+    ["haalbaar", "Haalbaarheid", 10],
+    ["top", "Top 3", 15],
+    ["export", "Inleveren", 0]
+  ];
+  var VRAGEN = {
+    zelf: [
+      ["q1", "Welke stap uit jullie journeys staat nog niet als user story in de briefing?", "Loop elke journey stap voor stap na. Geen enkele? Schrijf dan: geen."],
+      ["q2", "Welke must-have user story komt in geen enkele journey voor?", "Kijk in de briefing naar alle user stories met een M."],
+      ["q3", "Waar in de journey moet de gebruiker wachten, zoeken of iets onthouden?", "Dat zijn de plekken waar Peter of Daan afhaakt."],
+      ["q4", "Wat weten jullie nog niet, maar hebben jullie wel nodig om dit te bouwen?", "Denk aan inhoud van het museum, techniek of wensen van de docent."]
+    ],
+    ronde: [
+      ["twijfel", "Waar twijfelde de tester of stelde hij een vraag?", "Noem de stap in de journey."],
+      ["ontbreekt", "Welke stap ontbrak, of was er te veel?", ""],
+      ["briefing", "Wat klopt er niet tussen de journey en de briefing?", "Bijvoorbeeld: de tester doet iets wat nergens in de briefing staat."]
+    ],
+    haalbaar: [
+      ["zeker", "Wat kunnen jullie zeker bouwen binnen de projecttijd?", "Bespreek dit samen met de testers."],
+      ["teveel", "Wat is waarschijnlijk te veel of te moeilijk?", "Wees eerlijk. Schrappen is ook een keuze."],
+      ["mist", "Welke kennis of techniek missen jullie nog?", ""],
+      ["nodig", "Wat hebben jullie nodig van het museum of van de docent?", ""],
+      ["reden", "Waarom geven de testers dit cijfer?", "Laat de testers dit in hun eigen woorden zeggen."]
+    ]
+  };
+
+  // Uitleg en schema per stap. Het vetgedrukte vak in het schema is de kern van de stap.
+  var UITLEG = {
+    groep: { tekst: ["In deze app testen jullie met een ander groepje elkaars user journey en briefing. Daarna bespreken jullie of het project haalbaar is.", "Jullie doorlopen zeven stappen. Bij elke stap stelt de app vragen. Beantwoord ze samen. In totaal duurt het ongeveer 75 minuten."],
+      schema: ["Rode draad (20 min)", "Zelfcontrole (10 min)", "Loop de route (2 x 15 min)", "Haalbaarheid (10 min)", "Top 3 (15 min)", "Inleveren"], nu: -1 },
+    draad: { tekst: ["Jullie leggen de rode draad tussen de briefing en de user journey: wat de gebruiker wil (user story) en hoe hij dat stap voor stap doet (journey).", "Gebruik jullie museumonderwerp als voorbeeld. Zo wordt de journey concreet."],
+      schema: ["User story uit de briefing", "Journey in stappen", "Voorbeeld uit het museum"], nu: 1 },
+    zelf: { tekst: ["Leg de journeys naast de briefing en zoek de gaten. Een stap zonder user story betekent dat er iets ontbreekt in de briefing. Een must-have user story zonder journey is nog niet uitgedacht."],
+      schema: ["Journey naast briefing leggen", "Gaten zoeken", "Antwoorden opschrijven"], nu: 1 },
+    test: { tekst: ["Let op: jullie lopen niet echt ergens heen. De tester speelt een scenario na, aan tafel. Hij doet alsof hij Peter of Daan is en vertelt hardop, stap voor stap, wat hij zou doen.", "De makers lezen mee in hun eigen journey en leggen niets uit. Zo zie je waar de journey en de briefing niet kloppen. Daarna wisselen de groepjes van rol."],
+      schema: ["Testers trekken een scenario", "Tester speelt het na en praat hardop", "Makers lezen mee en zwijgen", "Samen de vragen beantwoorden", "Wisselen van rol"], nu: 1 },
+    haalbaar: { tekst: ["De testers hebben net jullie journey en briefing gezien. Bespreek samen of jullie dit project kunnen bouwen in de tijd die er is. De testers geven een cijfer en zeggen waarom."],
+      schema: ["Makers vertellen wat ze willen bouwen", "Testers zeggen wat ze ervan denken", "Samen een cijfer kiezen"], nu: 1 },
+    top: { tekst: ["Lees alles terug wat jullie hebben opgeschreven. Kies de drie punten die het meeste verschil maken en schrijf op wat jullie aanpassen in de journey of in de briefing."],
+      schema: ["Antwoorden teruglezen", "Drie punten kiezen", "Aanpassing opschrijven"], nu: 1 },
+    export: { tekst: ["Het JSON-bestand bevat al jullie antwoorden. Jullie docent laadt dit bestand bij de review."],
+      schema: ["Controleren", "JSON-bestand downloaden", "Inleveren bij je docent"], nu: 1 }
+  };
+  function zoWerkt(tab) {
+    var u = UITLEG[tab];
+    if (!u) return null;
+    var items = [];
+    u.schema.forEach(function (t, i) {
+      items.push(el("li", { style: "animation-delay:" + (i * 70) + "ms" }, [
+        i > 0 ? el("span", { class: "pijl", "aria-hidden": "true", text: ">" }) : null,
+        el("span", { class: "doos" + (i === u.nu ? " nu" : ""), text: (i + 1) + ". " + t })
+      ]));
+    });
+    return el("div", { class: "zowerkt" }, [el("h3", { text: "Zo werkt deze stap" })]
+      .concat(u.tekst.map(function (t) { return el("p", { text: t }); }))
+      .concat([el("ol", { class: "schema" }, items)]));
+  }
+
+  function leeg() {
+    return {
+      app: "loop-de-route", versie: 2, groep: "", leden: "", onderwerp: "",
+      stories: [
+        { wie: "Peter (docent)", story: "", journey: "" }, { wie: "Peter (docent)", story: "", journey: "" },
+        { wie: "Daan (leerling)", story: "", journey: "" }, { wie: "Daan (leerling)", story: "", journey: "" }
+      ],
+      zelf: {}, getestDoor: "", rondes: [], haalbaar: { score: "" },
+      top: [{ mis: "", aanpassing: "" }, { mis: "", aanpassing: "" }, { mis: "", aanpassing: "" }]
+    };
+  }
+  function geldig(d) {
+    return d && d.app === "loop-de-route" && d.versie === 2 && Array.isArray(d.stories) && Array.isArray(d.rondes) && Array.isArray(d.top);
+  }
+  function vulAan(d) {
+    var b = leeg();
+    Object.keys(b).forEach(function (k) { if (d[k] == null) d[k] = b[k]; });
+    return d;
+  }
+
+  var data = leeg();
+  try {
+    var bewaard = JSON.parse(localStorage.getItem(SLEUTEL) || "null");
+    if (geldig(bewaard)) data = vulAan(bewaard);
+  } catch (e) { /* opslag niet beschikbaar */ }
+
+  var ui = { tab: "groep", anim: "vooruit", nieuweKaart: false, scenario: null, ronde: {}, sec: 0, loopt: false, klok: null, wissen: false, review: [], melding: "" };
+
+  function bewaar() {
+    try { localStorage.setItem(SLEUTEL, JSON.stringify(data)); } catch (e) { /* negeren */ }
+  }
+
+  // Elementen maken. Tekst gaat altijd via textContent.
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function (k) {
+      if (k === "text") n.textContent = attrs[k];
+      else if (k === "class") n.className = attrs[k];
+      else if (k.indexOf("on") === 0) n.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+  var teller = 0;
+  // Een vraag met antwoordveld. obj[key] wordt direct bijgewerkt en bewaard.
+  function vraag(tekst, hint, obj, key, groot, opslaan) {
+    var id = "v" + (++teller);
+    var inp = el(groot ? "textarea" : "input", { id: id });
+    if (!groot) inp.type = "text";
+    if (hint) inp.setAttribute("aria-describedby", id + "h");
+    inp.value = obj[key] || "";
+    inp.addEventListener("input", function () { obj[key] = inp.value; if (opslaan !== false) bewaar(); });
+    return el("div", {}, [el("label", { for: id, text: tekst }), hint ? el("p", { class: "hint", id: id + "h", text: hint }) : null, inp]);
+  }
+  function tijd(s) {
+    var m = Math.floor(s / 60), r = s % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (r < 10 ? "0" : "") + r;
+  }
+  function vol(v) { return !!String(v || "").trim(); }
+
+  // ---------- Timer ----------
+  function stopKlok() { clearInterval(ui.klok); ui.loopt = false; }
+  function startStop() {
+    if (ui.loopt) { stopKlok(); teken(); return; }
+    if (ui.sec <= 0) return;
+    ui.loopt = true;
+    ui.klok = setInterval(function () {
+      ui.sec--;
+      var t = document.getElementById("timer");
+      if (t) t.textContent = tijd(Math.max(ui.sec, 0));
+      if (ui.sec <= 0) {
+        stopKlok();
+        var m = document.getElementById("tijdop");
+        if (m) m.textContent = "De tijd is om. Rond af en ga door naar de volgende stap.";
+        var k = document.getElementById("startknop");
+        if (k) k.textContent = "Start";
+      }
+    }, 1000);
+    teken();
+  }
+  function timerBalk(minuten) {
+    if (!minuten) return null;
+    return el("div", { class: "timerbalk" }, [
+      el("span", { text: "Tijd voor deze stap:" }),
+      el("span", { id: "timer", class: "timer", text: tijd(Math.max(ui.sec, 0)) }),
+      el("button", { id: "startknop", class: "prim klein", text: ui.loopt ? "Pauze" : "Start", onclick: startStop }),
+      el("button", { class: "klein", text: "Opnieuw (" + minuten + " min)", onclick: function () { stopKlok(); ui.sec = minuten * 60; teken(); } }),
+      el("span", { id: "tijdop", role: "status", text: ui.sec <= 0 ? "De tijd is om. Rond af en ga door naar de volgende stap." : "" })
+    ]);
+  }
+
+  // ---------- Stappen ----------
+  function kop(titel, uitleg) {
+    var i = STAPPEN.map(function (s) { return s[0]; }).indexOf(ui.tab);
+    return [
+      el("p", { class: "stap", text: "Stap " + (i + 1) + " van " + STAPPEN.length }),
+      el("h2", { text: titel }),
+      el("p", { class: "uitleg", text: uitleg }),
+      zoWerkt(ui.tab),
+      timerBalk(STAPPEN[i][2])
+    ];
+  }
+  function knoppen() {
+    var i = STAPPEN.map(function (s) { return s[0]; }).indexOf(ui.tab);
+    return el("div", { class: "rij" }, [
+      i > 0 ? el("button", { text: "Vorige stap", onclick: function () { ga(STAPPEN[i - 1][0]); } }) : null,
+      i < STAPPEN.length - 1 ? el("button", { class: "prim", text: "Volgende stap: " + STAPPEN[i + 1][1], onclick: function () { ga(STAPPEN[i + 1][0]); } }) : null
+    ]);
+  }
+
+  function tabGroep() {
+    return el("div", {}, kop("Wie zijn jullie?", "Vul eerst in wie jullie zijn. Alles wordt bewaard op deze laptop.").concat([
+      vraag("Hoe heet jullie groepje?", "", data, "groep"),
+      vraag("Wie zitten er in het groepje?", "", data, "leden"),
+      vraag("Welk thema, welke periode of welk object hebben jullie gekozen in het museum?", "", data, "onderwerp"),
+      el("h3", { text: "Leg dit klaar" }),
+      el("ul", {}, [el("li", { text: "Jullie briefing met de user stories" }), el("li", { text: "Jullie user journeys" }), el("li", { text: "Wat jullie in het museum hebben verzameld" })]),
+      knoppen()
+    ]));
+  }
+
+  function tabDraad() {
+    var kids = kop("Rode draad", "Kies twee must-have user stories van Peter en twee van Daan uit jullie briefing. Beschrijf bij elke user story de journey, met jullie museumonderwerp als voorbeeld.");
+    data.stories.forEach(function (s, i) {
+      kids.push(el("div", { class: "blok" }, [
+        el("h3", { text: "User story " + (i + 1) + ": " + s.wie }),
+        vraag("Welke user story kiezen jullie?", "Neem hem letterlijk over uit de briefing: Als ... wil ik ..., zodat ...", s, "story", true),
+        vraag("Welke stappen zet " + (i < 2 ? "Peter" : "Daan") + " om dit te doen?", "Schrijf elke stap op een nieuwe regel. Begin bij het begin: waar is hij en wat doet hij als eerste?", s, "journey", true)
+      ]));
+    });
+    kids.push(knoppen());
+    return el("div", {}, kids);
+  }
+
+  function tabZelf() {
+    return el("div", {}, kop("Zelfcontrole", "Controleer eerst jullie eigen werk, voordat een ander groepje het test.").concat(
+      VRAGEN.zelf.map(function (v) { return vraag(v[1], v[2], data.zelf, v[0], true); }), [knoppen()]));
+  }
+
+  function trek() {
+    var i;
+    do { i = Math.floor(Math.random() * SCENARIOS.length); } while (SCENARIOS[i] === ui.scenario);
+    ui.scenario = SCENARIOS[i];
+    ui.nieuweKaart = true; teken(); ui.nieuweKaart = false;
+  }
+  function tabTest() {
+    var kids = kop("Loop de route", "Een ander groepje test jullie werk door een scenario na te spelen.");
+    kids.push(vraag("Welk groepje test jullie werk?", "", data, "getestDoor"));
+    kids.push(ui.scenario
+      ? el("div", { class: "kaart" + (ui.nieuweKaart ? " nieuw" : "") }, [el("div", { class: "wie", text: ui.scenario.wie }), el("div", { class: "taak", text: ui.scenario.taak })])
+      : el("div", { class: "kaart" }, [el("div", { class: "taak", text: "Laat de testers een scenario trekken." })]));
+    kids.push(el("div", { class: "rij" }, [el("button", { class: "prim", text: ui.scenario ? "Ander scenario" : "Trek een scenario", onclick: trek })]));
+    if (ui.scenario) {
+      kids.push(el("h3", { text: "Na dit scenario" }));
+      VRAGEN.ronde.forEach(function (v) { kids.push(vraag(v[1], v[2], ui.ronde, v[0], true, false)); });
+      if (ui.melding) kids.push(el("div", { class: "melding", role: "alert", text: ui.melding }));
+      kids.push(el("div", { class: "rij" }, [el("button", { class: "prim", text: "Ronde opslaan", onclick: function () {
+        if (!VRAGEN.ronde.some(function (v) { return vol(ui.ronde[v[0]]); })) { ui.melding = "Beantwoord eerst minimaal één vraag."; teken(); return; }
+        data.rondes.push(Object.assign({ scenario: ui.scenario.wie + ": " + ui.scenario.taak }, ui.ronde));
+        ui.ronde = {}; ui.scenario = null; ui.melding = ""; bewaar(); teken();
+      } })]));
+    }
+    kids.push(el("h3", { text: "Opgeslagen rondes (" + data.rondes.length + ")" }));
+    kids.push(el("p", { class: "hint", text: "Doe minimaal twee rondes: één als Peter en één als Daan." }));
+    if (!data.rondes.length) kids.push(el("p", { class: "leeg", text: "Nog geen rondes." }));
+    data.rondes.forEach(function (r, i) {
+      kids.push(el("div", { class: "bev" }, [toonRonde(r), el("div", { class: "rij" }, [el("button", { class: "klein", text: "Ronde verwijderen", onclick: function () { data.rondes.splice(i, 1); bewaar(); teken(); } })])]));
+    });
+    kids.push(knoppen());
+    return el("div", {}, kids);
+  }
+
+  function tabHaalbaar() {
+    var h = data.haalbaar;
+    var kids = kop("Haalbaarheid", "Bespreek met de testers of jullie project haalbaar is.");
+    VRAGEN.haalbaar.slice(0, 4).forEach(function (v) { kids.push(vraag(v[1], v[2], h, v[0], true)); });
+    kids.push(el("label", { id: "scorelabel", text: "Hoe haalbaar vinden de testers jullie project?" }));
+    kids.push(el("p", { class: "hint", text: "1 = niet haalbaar, 5 = goed haalbaar" }));
+    kids.push(el("div", { class: "rij", role: "group", "aria-labelledby": "scorelabel" }, [1, 2, 3, 4, 5].map(function (n) {
+      return el("button", { class: String(h.score) === String(n) ? "act" : "", "aria-pressed": String(h.score) === String(n) ? "true" : "false", text: String(n),
+        onclick: function () { h.score = n; bewaar(); teken(); } });
+    })));
+    var v = VRAGEN.haalbaar[4];
+    kids.push(vraag(v[1], v[2], h, v[0], true));
+    kids.push(knoppen());
+    return el("div", {}, kids);
+  }
+
+  function tabTop() {
+    var kids = kop("Top 3", "Kies de drie belangrijkste dingen die jullie hebben ontdekt. Schrijf bij elk punt op wat jullie aanpassen in de journey of in de briefing.");
+    data.top.forEach(function (t, i) {
+      kids.push(el("div", { class: "blok" }, [
+        el("h3", { text: "Punt " + (i + 1) }),
+        vraag("Wat hebben jullie ontdekt?", "", t, "mis", true),
+        vraag("Wat passen jullie aan, en waar?", "Noem de journey of het onderdeel van de briefing.", t, "aanpassing", true)
+      ]));
+    });
+    kids.push(knoppen());
+    return el("div", {}, kids);
+  }
+
+  function download() {
+    var uit = Object.assign({}, data, { geexporteerd: new Date().toISOString() });
+    var naam = (data.groep || "groepje").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "groepje";
+    var blob = new Blob([JSON.stringify(uit, null, 2)], { type: "application/json" });
+    var a = el("a", { href: URL.createObjectURL(blob), download: "loop-de-route_" + naam + ".json" });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+  function controle(d) {
+    return [
+      [vol(d.groep), "Naam van het groepje is ingevuld"],
+      [d.stories.every(function (s) { return vol(s.story) && vol(s.journey); }), "Vier user stories hebben een journey"],
+      [VRAGEN.zelf.every(function (v) { return vol(d.zelf[v[0]]); }), "De zelfcontrole is ingevuld"],
+      [d.rondes.length >= 2, "Er zijn minimaal twee testrondes opgeslagen"],
+      [vol(d.haalbaar.score) && vol(d.haalbaar.reden), "De haalbaarheid is besproken en heeft een cijfer"],
+      [d.top.every(function (t) { return vol(t.mis) && vol(t.aanpassing); }), "De top 3 is compleet"]
+    ];
+  }
+  function klaarTab(tab) {
+    var c = controle(data), m = { groep: 0, draad: 1, zelf: 2, test: 3, haalbaar: 4, top: 5 };
+    return m[tab] != null && c[m[tab]][0];
+  }
+  function tabExport() {
+    return el("div", {}, kop("Inleveren", "Controleer of alles klaar is. Download daarna het JSON-bestand en lever het in op de plek die je docent aangeeft.").concat([
+      el("ul", {}, controle(data).map(function (k) { return el("li", { text: (k[0] ? "Klaar: " : "Nog doen: ") + k[1] }); })),
+      el("div", { class: "rij" }, [el("button", { class: "prim", text: "Download JSON-bestand", onclick: download })]),
+      el("h3", { text: "Jullie resultaat" }),
+      toonResultaat(data),
+      el("h3", { text: "Opnieuw beginnen" }),
+      el("p", { class: "hint", text: "Hiermee wis je alles op deze laptop. Download eerst je bestand." }),
+      el("div", { class: "rij" }, [
+        ui.wissen
+          ? el("button", { class: "act", text: "Ja, wis alles", onclick: function () { data = leeg(); ui.wissen = false; ui.scenario = null; ui.ronde = {}; bewaar(); ga("groep"); } })
+          : el("button", { text: "Alles wissen", onclick: function () { ui.wissen = true; teken(); } }),
+        ui.wissen ? el("button", { text: "Annuleren", onclick: function () { ui.wissen = false; teken(); } }) : null
+      ]),
+      knoppen()
+    ]));
+  }
+
+  // ---------- Resultaat tonen (ook voor import) ----------
+  function va(vraagTekst, antwoord) {
+    return el("div", {}, [el("p", { class: "hint", text: vraagTekst }), vol(antwoord) ? el("p", { class: "antw", text: String(antwoord) }) : el("p", { class: "leeg", text: "Niet ingevuld" })]);
+  }
+  function toonRonde(r) {
+    return el("div", {}, [el("p", {}, [el("span", { class: "tag", text: "Scenario" }), el("span", { text: r.scenario || "" })])]
+      .concat(VRAGEN.ronde.map(function (v) { return va(v[1], r[v[0]]); })));
+  }
+  function toonResultaat(d) {
+    var kids = [el("p", { class: "klein-tekst", text: "Leden: " + (d.leden || "-") + ". Onderwerp: " + (d.onderwerp || "-") + ". Getest door: " + (d.getestDoor || "-") + "." })];
+    kids.push(el("h3", { text: "Rode draad" }));
+    kids.push(el("table", {}, [
+      el("thead", {}, [el("tr", {}, [el("th", { scope: "col", text: "Voor wie" }), el("th", { scope: "col", text: "User story" }), el("th", { scope: "col", text: "Journey" })])]),
+      el("tbody", {}, d.stories.map(function (s) { return el("tr", {}, [el("td", { text: s.wie || "" }), el("td", { class: "antw", text: s.story || "" }), el("td", { class: "antw", text: s.journey || "" })]); }))
+    ]));
+    kids.push(el("h3", { text: "Zelfcontrole" }));
+    VRAGEN.zelf.forEach(function (v) { kids.push(va(v[1], (d.zelf || {})[v[0]])); });
+    kids.push(el("h3", { text: "Testrondes (" + d.rondes.length + ")" }));
+    if (!d.rondes.length) kids.push(el("p", { class: "leeg", text: "Geen rondes." }));
+    d.rondes.forEach(function (r) { kids.push(el("div", { class: "bev" }, [toonRonde(r)])); });
+    kids.push(el("h3", { text: "Haalbaarheid: " + (vol((d.haalbaar || {}).score) ? d.haalbaar.score + " van 5" : "geen cijfer") }));
+    VRAGEN.haalbaar.forEach(function (v) { kids.push(va(v[1], (d.haalbaar || {})[v[0]])); });
+    kids.push(el("h3", { text: "Top 3" }));
+    kids.push(el("table", {}, [
+      el("thead", {}, [el("tr", {}, [el("th", { scope: "col", text: "Nr" }), el("th", { scope: "col", text: "Ontdekt" }), el("th", { scope: "col", text: "Aanpassing" })])]),
+      el("tbody", {}, d.top.map(function (t, i) { return el("tr", {}, [el("td", { text: String(i + 1) }), el("td", { class: "antw", text: t.mis || "" }), el("td", { class: "antw", text: t.aanpassing || "" })]); }))
+    ]));
+    return el("div", {}, kids);
+  }
+
+  // ---------- Importeren ----------
+  function leesBestanden(files) {
+    var fouten = [], wacht = files.length;
+    if (!wacht) return;
+    Array.prototype.forEach.call(files, function (f) {
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var d = JSON.parse(r.result);
+          if (!geldig(d)) throw new Error("vorm");
+          d = vulAan(d);
+          ui.review = ui.review.filter(function (x) { return x.groep !== d.groep; });
+          ui.review.push(d);
+        } catch (e) { fouten.push(f.name); }
+        klaar();
+      };
+      r.onerror = function () { fouten.push(f.name); klaar(); };
+      r.readAsText(f);
+    });
+    function klaar() {
+      if (--wacht > 0) return;
+      ui.review.sort(function (a, b) { return String(a.groep).localeCompare(String(b.groep)); });
+      ui.melding = fouten.length ? "Niet gelezen (geen geldig bestand van deze app): " + fouten.join(", ") : "";
+      teken();
+    }
+  }
+  function tabImport() {
+    var kies = el("input", { type: "file", id: "bestanden", accept: ".json,application/json", multiple: "multiple" });
+    kies.addEventListener("change", function () { leesBestanden(kies.files); });
+    var kids = [
+      el("h2", { text: "Importeren en review" }),
+      el("p", { class: "uitleg", text: "Laad een JSON-bestand om het resultaat van een groepje te bekijken. Je kunt ook meerdere bestanden tegelijk kiezen. Er wordt niets verstuurd; de bestanden blijven op dit apparaat." }),
+      el("label", { for: "bestanden", text: "Kies een of meer JSON-bestanden" }),
+      kies,
+      ui.melding ? el("div", { class: "melding", role: "alert", text: ui.melding }) : null
+    ];
+    if (!ui.review.length) { kids.push(el("p", { class: "leeg", text: "Nog geen bestanden geladen." })); return el("div", {}, kids); }
+    kids.push(el("div", { class: "rij noprint" }, [
+      el("button", { text: "Afdrukken", onclick: function () { window.print(); } }),
+      el("button", { text: "Lijst leegmaken", onclick: function () { ui.review = []; ui.melding = ""; teken(); } })
+    ]));
+    if (ui.review.length > 1) {
+      kids.push(el("h3", { text: "Overzicht (" + ui.review.length + " groepjes)" }));
+      kids.push(el("table", {}, [
+        el("thead", {}, [el("tr", {}, ["Groepje", "Onderwerp", "Getest door", "Rondes", "Haalbaarheid", "Compleet"].map(function (t) { return el("th", { scope: "col", text: t }); }))]),
+        el("tbody", {}, ui.review.map(function (d) {
+          var c = controle(d), ok = c.filter(function (k) { return k[0]; }).length;
+          return el("tr", {}, [
+            el("th", { scope: "row", text: d.groep || "(geen naam)", style: "background:#fff;color:#000" }),
+            el("td", { text: d.onderwerp || "" }), el("td", { text: d.getestDoor || "" }), el("td", { text: String(d.rondes.length) }),
+            el("td", { text: vol(d.haalbaar.score) ? d.haalbaar.score + " van 5" : "-" }), el("td", { text: ok + " van " + c.length })
+          ]);
+        }))
+      ]));
+    }
+    ui.review.forEach(function (d) {
+      kids.push(el("div", { class: "blok" }, [
+        el("h2", { text: d.groep || "(geen naam)" }),
+        toonResultaat(d),
+        el("div", { class: "rij noprint" }, [el("button", { text: "Verder werken met dit bestand", onclick: function () {
+          data = JSON.parse(JSON.stringify(d)); delete data.geexporteerd; bewaar(); ga("groep");
+        } })]),
+        el("p", { class: "hint noprint", text: "Let op: verder werken vervangt wat nu op deze laptop is ingevuld." })
+      ]));
+    });
+    return el("div", {}, kids);
+  }
+
+  // ---------- Tekenen ----------
+  var MAAK = { groep: tabGroep, draad: tabDraad, zelf: tabZelf, test: tabTest, haalbaar: tabHaalbaar, top: tabTop, export: tabExport, import: tabImport };
+  function ga(tab) {
+    stopKlok();
+    var volg = STAPPEN.map(function (x) { return x[0]; }).concat(["import"]);
+    ui.anim = volg.indexOf(tab) < volg.indexOf(ui.tab) ? "terug" : "vooruit";
+    ui.tab = tab; ui.melding = ""; ui.wissen = false;
+    var s = STAPPEN.filter(function (x) { return x[0] === tab; })[0];
+    ui.sec = s ? s[2] * 60 : 0;
+    teken(); window.scrollTo(0, 0);
+  }
+  function teken() {
+    teller = 0;
+    var nav = document.getElementById("nav");
+    nav.textContent = "";
+    STAPPEN.map(function (s, i) { return [s[0], (i + 1) + ". " + s[1]]; }).concat([["import", "Importeren en review"]]).forEach(function (t) {
+      nav.appendChild(el("button", { class: ui.tab === t[0] ? "act" : (klaarTab(t[0]) ? "gedaan" : ""), text: t[1] + (klaarTab(t[0]) ? " (klaar)" : ""), "aria-current": ui.tab === t[0] ? "page" : false, onclick: function () { ga(t[0]); } }));
+    });
+    var main = document.getElementById("main");
+    main.textContent = "";
+    var scherm = MAAK[ui.tab]();
+    scherm.className = "scherm" + (ui.anim ? " " + ui.anim : "");
+    ui.anim = "";
+    main.appendChild(scherm);
+  }
+  teken();
+})();
+</script>
+</body>
+</html>
